@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Usage Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .month-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .input-row label {
+            margin-right: 10px;
+            min-width: 100px;
+        }
+        .input-row input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .month-results {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .month-results div {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Water Usage Calculator</h1>
+        <div id="monthSections"></div>
+    </div>
+
+    <script>
+        const monthNames = ["January", "February", "March", "April", "May", "June", 
+                           "July", "August", "September", "October", "November", "December"];
+        const monthLengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        function generateMonthSections() {
+            const container = document.getElementById('monthSections');
+            const year = new Date().getFullYear();
+
+            monthNames.forEach((month, i) => {
+                const section = document.createElement('div');
+                section.className = 'month-section';
+
+                const firstDay = `${year}-${String(i + 1).padStart(2, '0')}-01`;
+                const lastDay = `${year}-${String(i + 1).padStart(2, '0')}-${monthLengths[i]}`;
+
+                section.innerHTML = `
+                    <h2>${month}</h2>
+                    <div class="input-container">
+                        <div class="input-row">
+                            <label>Date (YYYY-MM-DD):</label>
+                            <input type="date" class="date-input" min="${firstDay}" max="${lastDay}">
+                            <label>Reading (L):</label>
+                            <input type="number" class="reading-input">
+                            <button type="button" onclick="addReadingRow(${i})">Add Reading</button>
+                        </div>
+                    </div>
+                    <div class="month-results">
+                        <div><strong>Start Reading:</strong> <span class="start-${i}">0</span></div>
+                        <div><strong>Interim Estimate:</strong> <span class="interim-${i}">0</span></div>
+                        <div><strong>Final Estimate:</strong> <span class="final-${i}">0</span></div>
+                    </div>
+                `;
+                container.appendChild(section);
+
+                // Attach event listeners to the initial row
+                attachEventListeners(section.querySelector('.input-row'), i);
+            });
+        }
+
+        function addReadingRow(monthIndex) {
+            const container = document.querySelectorAll('.month-section')[monthIndex]
+                              .querySelector('.input-container');
+            const year = new Date().getFullYear();
+            const monthNumber = monthIndex + 1;
+            const firstDay = `${year}-${String(monthNumber).padStart(2, '0')}-01`;
+            const lastDay = `${year}-${String(monthNumber).padStart(2, '0')}-${monthLengths[monthIndex]}`;
+
+            const newRow = document.createElement('div');
+            newRow.className = 'input-row';
+            newRow.innerHTML = `
+                <label>Date (YYYY-MM-DD):</label>
+                <input type="date" class="date-input" min="${firstDay}" max="${lastDay}">
+                <label>Reading (L):</label>
+                <input type="number" class="reading-input">
+            `;
+            container.appendChild(newRow);
+
+            // Attach event listeners to the new row
+            attachEventListeners(newRow, monthIndex);
+        }
+
+        function attachEventListeners(row, monthIndex) {
+            const dateInput = row.querySelector('.date-input');
+            const readingInput = row.querySelector('.reading-input');
+
+            dateInput.addEventListener('input', () => calculateAllEstimates());
+            readingInput.addEventListener('input', () => calculateAllEstimates());
+        }
+
+        function calculateAllEstimates() {
+            for (let i = 0; i < 12; i++) {
+                calculateEstimates(i);
+            }
+        }
+
+        function calculateEstimates(monthIndex) {
+            const section = document.querySelectorAll('.month-section')[monthIndex];
+            const inputs = section.querySelectorAll('.input-row');
+            const readings = [];
+
+            inputs.forEach(row => {
+                const dateInput = row.querySelector('.date-input');
+                const readingInput = row.querySelector('.reading-input');
+
+                if (dateInput.value && readingInput.value) {
+                    readings.push({
+                        date: new Date(dateInput.value),
+                        reading: parseFloat(readingInput.value)
+                    });
+                }
+            });
+
+            readings.sort((a, b) => a.date - b.date);
+
+            // Get previous month's final reading
+            let startReading = 0;
+            if (monthIndex > 0) {
+                const prevFinal = document.querySelector(`.final-${monthIndex - 1}`);
+                startReading = prevFinal ? parseFloat(prevFinal.textContent) : 0;
+            }
+
+            if (readings.length === 0) {
+                updateDisplay(monthIndex, startReading, 0, 0);
+                return;
+            }
+
+            const daysInMonth = monthLengths[monthIndex];
+            const firstReading = readings[0];
+            const lastReading = readings[readings.length - 1];
+
+            // Calculate interim estimate
+            const daysBetween = (lastReading.date - firstReading.date) / (1000 * 60 * 60 * 24);
+            const dailyUsageInterim = daysBetween > 0
+                ? (lastReading.reading - firstReading.reading) / daysBetween
+                : 0;
+            const interim = startReading + dailyUsageInterim * daysInMonth;
+
+            // Final estimate requires a reading from the next month
+            const nextMonthReadings = getReadings(monthIndex + 1);
+            let final = 0;
+
+            if (nextMonthReadings.length > 0) {
+                const firstNextReading = nextMonthReadings[0];
+                const daysBetweenMonths = (firstNextReading.date - lastReading.date) / (1000 * 60 * 60 * 24);
+                const dailyUsageFinal = daysBetweenMonths > 0
+                    ? (firstNextReading.reading - lastReading.reading) / daysBetweenMonths
+                    : 0;
+                final = startReading + dailyUsageFinal * daysInMonth;
+            }
+
+            updateDisplay(monthIndex, startReading, interim, final);
+        }
+
+        function getReadings(monthIndex) {
+            if (monthIndex >= 12) return [];
+            const section = document.querySelectorAll('.month-section')[monthIndex];
+            const inputs = section.querySelectorAll('.input-row');
+            const readings = [];
+
+            inputs.forEach(row => {
+                const dateInput = row.querySelector('.date-input');
+                const readingInput = row.querySelector('.reading-input');
+
+                if (dateInput.value && readingInput.value) {
+                    readings.push({
+                        date: new Date(dateInput.value),
+                        reading: parseFloat(readingInput.value)
+                    });
+                }
+            });
+
+            return readings.sort((a, b) => a.date - b.date);
+        }
+
+        function updateDisplay(monthIndex, start, interim, final) {
+            document.querySelector(`.start-${monthIndex}`).textContent = start.toFixed(0);
+            document.querySelector(`.interim-${monthIndex}`).textContent = interim.toFixed(0);
+            document.querySelector(`.final-${monthIndex}`).textContent = final.toFixed(0);
+        }
+
+        // Initialize the calculator
+        generateMonthSections();
+    </script>
+</body>
+</html>
