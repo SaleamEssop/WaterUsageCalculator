@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Calculator Refactored (Final)</title>
+    <style>
+        /* --- [0]: Modernized Styles --- */
+
+        /* Base & Variables */
+        :root {
+            --primary-color: #0d6efd; /* Bootstrap Blue */
+            --secondary-color: #6c757d; /* Bootstrap Gray */
+            --success-color: #198754; /* Bootstrap Green */
+            --danger-color: #dc3545; /* Bootstrap Red */
+            --warning-color: #ffc107; /* Bootstrap Yellow */
+            --light-color: #f8f9fa; /* Bootstrap Light Gray */
+            --dark-color: #212529; /* Bootstrap Dark */
+            --border-color: #dee2e6; /* Bootstrap Border Gray */
+            --text-muted: #6c757d;
+            --body-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            --border-radius: 0.375rem; /* Slightly larger radius */
+            --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        body {
+            font-family: var(--font-family-sans-serif);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--body-bg);
+            color: var(--dark-color);
+            font-size: 0.95rem; /* Slightly smaller base */
+        }
+
+        .container {
+            max-width: 720px; /* Slightly wider */
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        h2 { /* Month Name */
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--primary-color);
+        }
+
+        h3 { /* Section Headers */
+             font-size: 1.1rem;
+             font-weight: 500;
+             margin: 0;
+             color: #343a40; /* Slightly lighter dark */
+        }
+
+        /* Sections as Cards */
+        .section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.25rem; /* More padding */
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--box-shadow-sm);
+        }
+
+        .billing-input-section {
+            background-color: #e9ecef; /* Keep distinct bg for global input */
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Input & Controls Styling */
+        .month-controls {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .month-container {
+            margin-bottom: 2rem;
+            padding-top: 1rem;
+            border-top: 1px dashed #ccc;
+        }
+        .month-container:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .data-row {
+            display: flex;
+            align-items: flex-start; /* Align items to top */
+            gap: 1.5rem; /* More gap */
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .input-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; /* Space between small label and input line */
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .label-col {
+            width: auto; /* Allow natural width */
+            flex-shrink: 0;
+            font-size: 0.875em;
+            color: var(--text-muted);
+        }
+
+        .input-col {
+             width: 120px; /* Slightly wider */
+        }
+
+        select,
+        input[type="number"] {
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            background-color: var(--card-bg);
+            color: var(--dark-color);
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            border-color: #86b7fe; /* Light blue focus */
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        input[disabled] {
+            background-color: var(--light-color);
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Button Styling */
+        button {
+            padding: 0.5rem 1rem;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 400;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            user-select: none;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        button:not(:disabled):not(.disabled) {
+            cursor: pointer;
+        }
+
+        button.primary { background-color: var(--primary-color); border-color: var(--primary-color); color: white; }
+        button.primary:hover:not([disabled]) { background-color: #0b5ed7; border-color: #0a58ca; }
+
+        button.secondary { background-color: var(--secondary-color); border-color: var(--secondary-color); color: white; }
+        button.secondary:hover:not([disabled]) { background-color: #5c636a; border-color: #565e64; }
+
+        button.danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        button.danger:hover:not([disabled]) { background-color: #bb2d3b; border-color: #b02a37; }
+
+        button:disabled {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        /* Output Row Styling */
+        .output-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0; /* Vertical padding only */
+            margin: 0; /* Remove default margin */
+            border-bottom: 1px solid #f0f0f0; /* Light separator */
+            background-color: transparent; /* Inherit card bg */
+            border-radius: 0; /* Remove radius */
+            border-left: none; border-right: none; border-top: none; /* Only bottom border */
+        }
+        .output-row:last-child {
+            border-bottom: none; /* No border on last row */
+        }
+        #billing-section-${/*monthId*/} .output-row:last-of-type { /* Target very last row in billing section */
+             border-bottom: none;
+        }
+
+
+        .output-label {
+            font-weight: 500; /* Slightly bolder */
+            color: #495057; /* Darker gray */
+            font-size: 0.9em;
+            flex-basis: 60%; /* Give more space to label */
+            flex-shrink: 0;
+        }
+
+        .output-value {
+            color: var(--dark-color); /* Default dark */
+            font-weight: 500;
+            text-align: right;
+            flex-grow: 1;
+            font-size: 0.95em;
+        }
+        #start-reading-display-${/*monthId*/},
+        #end-reading-${/*monthId*/},
+        #daily-consumption-${/*monthId*/},
+        #current-month-usage-value-${/*monthId*/} {
+             color: var(--primary-color); /* Make key numbers blue */
+        }
+
+
+        /* Specific Row Highlights */
+        .total-bill-row {
+            margin-top: 1rem !important;
+            padding: 0.75rem 0 !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            border-top: 2px solid var(--primary-color) !important;
+            border-bottom: none !important;
+        }
+        .total-bill-row .output-label {
+            font-size: 1.05em !important;
+            color: var(--primary-color) !important;
+            font-weight: 600;
+        }
+        .total-bill-row .output-value {
+            font-size: 1.1em !important;
+            color: var(--primary-color) !important;
+            font-weight: 600;
+        }
+
+        .adjustment-row {
+            background-color: #fff3cd !important; /* Warning yellow */
+            border: none !important; /* Remove borders */
+            padding: 0.4rem 0.75rem !important; /* Adjust padding */
+            margin: 0.25rem 0 !important; /* Add vertical margin */
+            border-radius: var(--border-radius);
+        }
+        .adjustment-row.overestimated {
+            background-color: #d1e7dd !important; /* Muted success green */
+        }
+        .adjustment-label {
+            color: #664d03; /* Darker yellow */
+            font-size: 0.85em;
+            font-weight: 500;
+             flex-basis: 70% !important;
+        }
+        .adjustment-value {
+            color: #664d03;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .adjustment-row.overestimated .adjustment-label,
+        .adjustment-row.overestimated .adjustment-value {
+            color: #0f5132; /* Darker green */
+        }
+
+        /* Payment Section */
+        .payment-section-separator {
+            border-top: 1px dashed var(--border-color);
+            margin: 1.25rem 0 1rem 0;
+            padding-top: 1rem;
+        }
+        .payment-input-row { margin-top: 1rem !important; }
+        .payment-input-row .output-value input { margin-left: 0.25rem; } /* Align input */
+
+        .output-value.negative-balance {
+             color: var(--danger-color);
+             font-weight: 600;
+        }
+         #balance-outstanding-${/*monthId*/} {
+             font-weight: 600; /* Make final balance bold */
+         }
+
+        /* Helper Text */
+        small, .info-text {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        .reading-window-info { /* This was removed from HTML but keep style just in case */
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+             padding: 0.2rem 0.6rem;
+             border-radius: 1rem; /* Pill shape */
+             font-size: 0.75em;
+             font-weight: 500;
+             border: none; /* Remove border */
+             vertical-align: middle;
+        }
+        .status-estimated { background-color: var(--warning-color); color: var(--dark-color); }
+        .status-finalized { background-color: var(--success-color); color: white; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Water Calculator & Billing</h1>
+        <div class="billing-input-section section"> <label for="per-kilolitre-price">Price per Kilolitre (R):</label> <input type="number" id="per-kilolitre-price" step="0.01" min="0" value="15.50" placeholder="e.g., 15.50" oninput="handlePriceChange()"> </div>
+        <div class="month-controls"> <button id="add-month-btn" class="primary" onclick="addNextMonth()">+ Add Next Month</button> <button id="remove-month-btn" class="danger" onclick="removeLastMonth()" disabled>- Remove Last Month</button> </div>
+        <div id="months-container"></div>
+    </div>
+
+    <script>
+        // --- [4]: Configuration & Constants ---
+        const monthSequence = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const monthConfigs = { jan: { name: "January", shortName: "Jan", days: 31, prevMonthId: null }, feb: { name: "February", shortName: "Feb", days: 28, prevMonthId: 'jan' }, mar: { name: "March", shortName: "Mar", days: 31, prevMonthId: 'feb' }, apr: { name: "April", shortName: "Apr", days: 30, prevMonthId: 'mar' }, may: { name: "May", shortName: "May", days: 31, prevMonthId: 'apr' }, jun: { name: "June", shortName: "Jun", days: 30, prevMonthId: 'may' }, jul: { name: "July", shortName: "Jul", days: 31, prevMonthId: 'jun' }, aug: { name: "August", shortName: "Aug", days: 31, prevMonthId: 'jul' }, sep: { name: "September", shortName: "Sep", days: 30, prevMonthId: 'aug' }, oct: { name: "October", shortName: "Oct", days: 31, prevMonthId: 'sep' }, nov: { name: "November", shortName: "Nov", days: 30, prevMonthId: 'oct' }, dec: { name: "December", shortName: "Dec", days: 31, prevMonthId: 'nov' } };
+        const MAX_MONTHS = 12;
+        const READING_WINDOW_DAYS = 5;
+
+        // --- [5]: Global State Variables ---
+        const displayedMonths = [];
+        const monthlyData = {};
+
+        // --- [6]: Initialization Function ---
+         document.addEventListener('DOMContentLoaded', () => { addMonthUI('jan'); calculateMonthUsage('jan'); updateButtonStates(); });
+
+        // --- [7]: Core Data Initialization for a Month ---
+        function initializeMonthData(monthId) { if (!monthConfigs[monthId]) return; if (!monthlyData[monthId]) { monthlyData[monthId] = { id: monthId, config: monthConfigs[monthId], inputReadings: [], calculatedStartReading: 0, earliestReading: null, latestReading: null, calculatedDaySpan: 0, dailyConsumption: 0, currentMonthOwnUsageLitres: 0, monthlyConsumptionLitres: 0, calculatedEndReading: 0, monthlyBill: 0, paymentMade: 0, balanceCarriedForward: 0, amountDue: 0, balanceOutstanding: 0, previousMonthAdjustmentLitres: 0, twoMonthsPriorAdjustmentLitres: 0, impliedEndOfMonthReadingN1: null, impliedEndOfMonthReadingN2: null, isFinalized: false }; } else { monthlyData[monthId].inputReadings = []; monthlyData[monthId].calculatedStartReading = 0; monthlyData[monthId].earliestReading = null; monthlyData[monthId].latestReading = null; monthlyData[monthId].calculatedDaySpan = 0; monthlyData[monthId].dailyConsumption = 0; monthlyData[monthId].currentMonthOwnUsageLitres = 0; monthlyData[monthId].monthlyConsumptionLitres = 0; monthlyData[monthId].calculatedEndReading = 0; monthlyData[monthId].monthlyBill = 0; monthlyData[monthId].paymentMade = 0; monthlyData[monthId].balanceCarriedForward = 0; monthlyData[monthId].amountDue = 0; monthlyData[monthId].balanceOutstanding = 0; monthlyData[monthId].previousMonthAdjustmentLitres = 0; monthlyData[monthId].twoMonthsPriorAdjustmentLitres = 0; monthlyData[monthId].impliedEndOfMonthReadingN1 = null; monthlyData[monthId].impliedEndOfMonthReadingN2 = null; monthlyData[monthId].isFinalized = false; } }
+
+        // --- [8]: Dynamic UI Management - Add Month UI ---
+         function addMonthUI(monthId) {
+             if (!monthConfigs[monthId] || displayedMonths.includes(monthId)) return;
+             initializeMonthData(monthId);
+             const config = monthConfigs[monthId];
+             const container = document.getElementById('months-container');
+             const monthDiv = document.createElement('div');
+             monthDiv.className = 'month-container';
+             monthDiv.id = `${monthId}-calculator`;
+             monthDiv.innerHTML = `<h2>${config.name}</h2>
+                <div class="section" id="readings-section-${monthId}">
+                     <div class="section-header"><h3>Meter Readings</h3><span class="status-indicator status-estimated" id="status-indicator-${monthId}">Estimated</span></div>
+                     <div class="data-row"> <div class="input-block"> <small>${config.shortName} 1st Start Reading</small> <div class="input-line"><div class="label-col">Default:</div><input type="number" id="default-start-reading-${monthId}" value="0.00" step="0.01" disabled></div> <div class="input-line" style="margin-top: 5px;"><div class="label-col">Override:</div><input type="number" id="override-start-reading-${monthId}" step="0.01" placeholder="Actual Reading" oninput="handleReadingChange(this, '${monthId}')"></div> <small class="info-text">Projected from prev. month or enter actual.</small> </div> </div>
+                     <div id="additional-readings-${monthId}"></div> <button class="primary" onclick="addReadingRow('${monthId}')">+ Add Reading</button>
+                </div>
+                <div class="section" id="billing-section-${monthId}">
+                    <div class="section-header"><h3>Billing & Payment</h3></div>
+                    <div class="output-row"><span class="output-label" id="start-reading-label-${monthId}">Start Reading:</span><span class="output-value" id="start-reading-display-${monthId}">0.00</span></div>
+                    <div class="output-row adjustment-row" id="two-months-prior-adjustment-row-${monthId}" style="display: none;"> <span class="output-label adjustment-label" id="two-months-prior-adjustment-label-${monthId}">[N-2 Month] Adjustment:</span> <span class="output-value adjustment-value" id="two-months-prior-adjustment-value-${monthId}">0</span> </div>
+                    <div class="output-row adjustment-row" id="adjustment-row-${monthId}" style="display: none;"> <span class="output-label adjustment-label" id="adjustment-label-${monthId}">[N-1 Month] Adjustment:</span> <span class="output-value adjustment-value" id="adjustment-value-${monthId}">0</span> </div>
+                    <div class="output-row"> <span class="output-label" id="current-month-usage-label-${monthId}">Current Month Consumption (Est):</span> <span class="output-value" id="current-month-usage-value-${monthId}">0 L</span> </div>
+                    <div class="output-row"><span class="output-label">End Reading:</span><span class="output-value" id="end-reading-${monthId}">0.00 <span id="end-reading-status-${monthId}">(Estimated)</span></span></div>
+                    <div class="output-row"><span class="output-label">Daily Consumption:</span><span class="output-value" id="daily-consumption-${monthId}">0.00</span></div>
+                    <div class="output-row total-bill-row"><span class="output-label">Current Month Bill (Est.):</span><span class="output-value" id="total-bill-${monthId}">R0.00</span></div>
+                    <div class="payment-section-separator"></div>
+                    <div class="output-row"> <span class="output-label">Balance Brought Forward:</span> <span class="output-value" id="balance-carried-forward-${monthId}">R0.00</span> </div>
+                    <div class="output-row"> <span class="output-label">Amount Due:</span> <span class="output-value" id="amount-due-${monthId}">R0.00</span> </div>
+                    <div class="output-row payment-input-row"> <span class="output-label">Payment Made:</span> <span class="output-value">R <input type="number" id="payment-made-${monthId}" value="0.00" step="0.01" min="0" style="width: 100px; text-align: right;" oninput="handlePaymentChange('${monthId}')"></span> </div>
+                    <div class="output-row"> <span class="output-label">Balance Outstanding:</span> <span class="output-value" id="balance-outstanding-${monthId}">R0.00</span> </div>
+                </div>`;
+             container.appendChild(monthDiv);
+             displayedMonths.push(monthId);
+             if(displayedMonths.length === 1) { addReadingRow(monthId); }
+         }
+
+        // --- [9]: Dynamic UI Management - Add Next Month Button Action ---
+        function addNextMonth() { if (displayedMonths.length >= MAX_MONTHS) return; const lastMonthId = displayedMonths[displayedMonths.length - 1]; const lastMonthIndex = monthSequence.indexOf(lastMonthId); if (lastMonthIndex < monthSequence.length - 1) { const nextMonthId = monthSequence[lastMonthIndex + 1]; addMonthUI(nextMonthId); calculateDefaultStartReading(nextMonthId, lastMonthId); calculateMonthUsage(nextMonthId); updateButtonStates(); } }
+
+        // --- [10]: Dynamic UI Management - Remove Last Month Button Action ---
+        function removeLastMonth() { if (displayedMonths.length <= 1) return; const lastMonthId = displayedMonths.pop(); if (monthlyData[lastMonthId]) { delete monthlyData[lastMonthId]; } const monthElement = document.getElementById(`${lastMonthId}-calculator`); if (monthElement) { monthElement.remove(); } updateButtonStates(); }
+
+        // --- [11]: Dynamic UI Management - Update Add/Remove Button States ---
+        function updateButtonStates() { const addButton = document.getElementById('add-month-btn'); const removeButton = document.getElementById('remove-month-btn'); addButton.disabled = displayedMonths.length >= MAX_MONTHS; removeButton.disabled = displayedMonths.length <= 1; }
+
+        // --- [12]: Dynamic UI Management - Add Reading Row UI ---
+        function addReadingRow(monthId) { if (!monthConfigs[monthId]) return; const readingsContainer = document.getElementById(`additional-readings-${monthId}`); if (!readingsContainer) return; const config = monthConfigs[monthId]; const isFirstRow = readingsContainer.children.length === 0; const row = document.createElement('div'); row.className = 'data-row'; row.innerHTML = ` <div class="input-block"> <small>Reading Date</small> <div class="input-line"> <div class="label-col">Day:</div> <select class="reading-date" onchange="handleReadingChange(this, '${monthId}')"> ${generateDateOptions(monthId, isFirstRow)} </select> </div> </div> <div class="input-block"> <small>Reading Value</small> <div class="input-line"> <div class="label-col">Meter:</div> <input type="number" class="reading-value" step="0.01" placeholder="0.00" oninput="handleReadingChange(this, '${monthId}')"> </div> </div> <button class="secondary" onclick="removeReadingRow(this, '${monthId}')">Remove</button> `; readingsContainer.appendChild(row); }
+
+        // --- [13]: Dynamic UI Management - Remove Reading Row Action ---
+        function removeReadingRow(button, monthId) { button.closest('.data-row').remove(); calculateMonthUsage(monthId); }
+
+        // --- [14]: Dynamic UI Management - Generate Date Options ---
+        function generateDateOptions(monthId, isFirstRow) { if (!monthConfigs[monthId]) return ''; const config = monthConfigs[monthId]; let options = `<optgroup label="${config.name}">`; for (let i = 1; i <= config.days; i++) { const selected = isFirstRow && i === 2 ? ' selected' : ''; options += `<option value="${i}"${selected}>${config.shortName} ${i}</option>`; } options += `</optgroup>`; return options; }
+
+        // --- [15]: Event Handler - Reading Input Change ---
+        function handleReadingChange(eventSourceElement, monthId) { calculateMonthUsage(monthId); }
+
+        // --- [16]: Event Handler - Price Input Change ---
+        function handlePriceChange() { displayedMonths.forEach(monthId => { calculateMonthBill(monthId); }); }
+
+        // --- [17]: Day Span Calculation Logic ---
+        function calculateDaySpanInclusive(day1, day2) { if (day1 === undefined || day1 === null || day2 === undefined || day2 === null || day2 < day1) { return 1; } return (day2 - day1) + 1; }
+
+        // --- [18]: Main Calculation Function - Specific Month Usage ---
+        function calculateMonthUsage(monthId) {
+             const monthState = monthlyData[monthId];
+             if (!monthState) { console.error("Month data not initialized for calculation:", monthId); return; }
+             const config = monthState.config;
+             const prevMonthId = config.prevMonthId;
+             const prevPrevMonthId = prevMonthId ? monthConfigs[prevMonthId]?.prevMonthId : null;
+
+             // --- 18a: Gather Inputs & Calculate Adjustments ---
+             monthState.inputReadings = []; monthState.previousMonthAdjustmentLitres = 0; monthState.twoMonthsPriorAdjustmentLitres = 0; monthState.impliedEndOfMonthReadingN1 = null; monthState.impliedEndOfMonthReadingN2 = null; let rateOverSkippedPeriod = null;
+             const overrideStartInput = document.getElementById(`override-start-reading-${monthId}`); const defaultStartInput = document.getElementById(`default-start-reading-${monthId}`); const overrideStartValueStr = overrideStartInput.value.trim(); const overrideStartValue = parseFloat(overrideStartValueStr); const defaultStartValue = parseFloat(defaultStartInput.value) || 0; let wasOverrideUsed = (overrideStartValueStr !== '' && !isNaN(overrideStartValue));
+             monthState.calculatedStartReading = wasOverrideUsed ? overrideStartValue : defaultStartValue;
+             if (wasOverrideUsed && prevMonthId && monthlyData[prevMonthId]) { const prevMonthState = monthlyData[prevMonthId]; const prevMonthSkipped = prevMonthState.inputReadings.length === 0; const totalDiscrepancy = overrideStartValue - defaultStartValue; if (prevMonthSkipped && prevPrevMonthId && monthlyData[prevPrevMonthId]) { const prevPrevMonthState = monthlyData[prevPrevMonthId]; const startN_2 = prevPrevMonthState.calculatedStartReading; const daysN_2 = prevPrevMonthState.config.days; const daysN_1 = prevMonthState.config.days; const totalSkippedDays = daysN_2 + daysN_1; if (totalSkippedDays > 0) { const discrepancyRate = totalDiscrepancy / totalSkippedDays; monthState.twoMonthsPriorAdjustmentLitres = discrepancyRate * daysN_2; monthState.previousMonthAdjustmentLitres = discrepancyRate * daysN_1; const totalValueDifferenceN2toN = overrideStartValue - startN_2; const totalSpanN2toN = daysN_2 + daysN_1 + 1; if (totalSpanN2toN > 0 && totalValueDifferenceN2toN >= 0) { rateOverSkippedPeriod = totalValueDifferenceN2toN / totalSpanN2toN; } } else { monthState.previousMonthAdjustmentLitres = totalDiscrepancy; } monthState.impliedEndOfMonthReadingN1 = null; monthState.impliedEndOfMonthReadingN2 = null; } else { monthState.previousMonthAdjustmentLitres = totalDiscrepancy; monthState.twoMonthsPriorAdjustmentLitres = 0; monthState.impliedEndOfMonthReadingN1 = null; monthState.impliedEndOfMonthReadingN2 = null; } }
+             const readingRows = document.querySelectorAll(`#additional-readings-${monthId} .data-row`); readingRows.forEach(row => { const dateSelect = row.querySelector('.reading-date'); const dayValue = parseInt(dateSelect.value); const valueInput = row.querySelector('.reading-value'); const value = parseFloat(valueInput.value); if (dayValue && valueInput.value.trim() !== '' && !isNaN(value) && dayValue > 0 && dayValue <= config.days) { monthState.inputReadings.push({ day: dayValue, value: value }); } });
+
+             // --- 18b: Determine Earliest & Latest Readings & Finalization ---
+             let potentiallyRelevantReadings = [ { day: 1, value: monthState.calculatedStartReading, sourceMonth: monthId, originalDay: 1 }, ...monthState.inputReadings.map(r => ({ ...r, originalDay: r.day })) ];
+             const nextMonthId = monthSequence[monthSequence.indexOf(monthId) + 1] || null;
+             if (nextMonthId && displayedMonths.includes(nextMonthId)) { const nextOverrideInput = document.getElementById(`override-start-reading-${nextMonthId}`); const nextDefaultInput = document.getElementById(`default-start-reading-${nextMonthId}`); if (nextOverrideInput && nextDefaultInput) { const nextOverrideValueStr = nextOverrideInput.value.trim(); const nextOverrideValue = parseFloat(nextOverrideValueStr); if (nextOverrideValueStr !== '' && !isNaN(nextOverrideValue)) { potentiallyRelevantReadings.push({ day: config.days + 1, value: nextOverrideValue, sourceMonth: nextMonthId, originalDay: 1 }); } } }
+             potentiallyRelevantReadings.sort((a, b) => { return a.day - b.day; });
+             const uniquePotentialReadings = Object.values(potentiallyRelevantReadings.reduce((acc, current) => { acc[current.day] = current; return acc; }, {}));
+             let finalizingReading = null; monthState.isFinalized = false;
+             for (const reading of uniquePotentialReadings) { if (reading.sourceMonth === monthId && reading.day === config.days) { finalizingReading = reading; monthState.isFinalized = true; break; } if (reading.sourceMonth === nextMonthId && reading.originalDay === 1) { finalizingReading = reading; monthState.isFinalized = true; break; } }
+             let readingsToUse = uniquePotentialReadings; if (monthState.isFinalized && finalizingReading) { readingsToUse = uniquePotentialReadings.filter(r => r.day <= finalizingReading.day); }
+             monthState.earliestReading = readingsToUse.length > 0 ? readingsToUse[0] : null; monthState.latestReading = readingsToUse.length > 0 ? readingsToUse[readingsToUse.length - 1] : null;
+
+             // --- 18c: Calculate Consumption for THIS Month ---
+             monthState.dailyConsumption = 0; monthState.calculatedDaySpan = 0;
+             if (readingsToUse.length > 1) { const firstReading = monthState.earliestReading; const lastReading = monthState.latestReading; const firstAdditionalReading = (readingsToUse.length > 1 && readingsToUse[0].day === 1) ? readingsToUse[1] : readingsToUse[0]; if (firstAdditionalReading && firstAdditionalReading.day <= READING_WINDOW_DAYS && firstAdditionalReading.sourceMonth === monthId && prevMonthId && monthlyData[prevMonthId]) { const prevMonthState = monthlyData[prevMonthId]; const prevMonthStartReading = prevMonthState.calculatedStartReading; const readingInWindow = firstAdditionalReading; const totalValueDifference = readingInWindow.value - prevMonthStartReading; const totalSpanAcrossMonths = prevMonthState.config.days + readingInWindow.day; if (totalSpanAcrossMonths > 0 && totalValueDifference >= 0) { const newDailyRate = totalValueDifference / totalSpanAcrossMonths; monthState.dailyConsumption = newDailyRate; monthState.previousMonthAdjustmentLitres = newDailyRate * prevMonthState.config.days; monthState.impliedEndOfMonthReadingN1 = prevMonthStartReading + monthState.previousMonthAdjustmentLitres; monthState.twoMonthsPriorAdjustmentLitres = 0; monthState.impliedEndOfMonthReadingN2 = null; } else { monthState.dailyConsumption = 0; monthState.previousMonthAdjustmentLitres = 0; monthState.twoMonthsPriorAdjustmentLitres = 0; monthState.impliedEndOfMonthReadingN1 = null; monthState.impliedEndOfMonthReadingN2 = null;} monthState.calculatedDaySpan = 0; } else { const valueDifference = lastReading.value - firstReading.value; if (monthState.isFinalized && lastReading.sourceMonth === nextMonthId && lastReading.originalDay === 1) { monthState.calculatedDaySpan = config.days; } else { monthState.calculatedDaySpan = calculateDaySpanInclusive(firstReading.day, lastReading.day); } if (monthState.calculatedDaySpan > 0 && valueDifference >= 0) { monthState.dailyConsumption = valueDifference / monthState.calculatedDaySpan; } else { monthState.dailyConsumption = 0; } } } else if (readingsToUse.length === 1) { monthState.calculatedDaySpan = 0; if (wasOverrideUsed && prevMonthId && monthlyData[prevMonthId]) { const prevMonthState = monthlyData[prevMonthId]; const prevMonthSkipped = prevMonthState.inputReadings.length === 0; if (prevMonthSkipped && rateOverSkippedPeriod !== null) { monthState.dailyConsumption = rateOverSkippedPeriod; } else if (!prevMonthSkipped) { const startN_1 = prevMonthState.calculatedStartReading; const daysN_1 = prevMonthState.config.days; const overrideN = monthState.calculatedStartReading; const totalValueDifference = overrideN - startN_1; const totalSpan = daysN_1 + 1; if (totalSpan > 0 && totalValueDifference >= 0) { monthState.dailyConsumption = totalValueDifference / totalSpan; } else { monthState.dailyConsumption = 0; } } else { monthState.dailyConsumption = prevMonthState.dailyConsumption; } } else if (prevMonthId && monthlyData[prevMonthId]) { monthState.dailyConsumption = monthlyData[prevMonthId].dailyConsumption; } else { monthState.dailyConsumption = 0; } } else { monthState.dailyConsumption = 0; monthState.calculatedDaySpan = 0; monthState.previousMonthAdjustmentLitres = 0; monthState.twoMonthsPriorAdjustmentLitres = 0; monthState.impliedEndOfMonthReadingN1 = null; monthState.impliedEndOfMonthReadingN2 = null;}
+
+             // --- Calculate FINAL Monthly Totals ---
+             const currentMonthOwnUsage = monthState.dailyConsumption * config.days;
+             monthState.currentMonthOwnUsageLitres = currentMonthOwnUsage;
+             const adjustmentN1 = Math.max(0, monthState.previousMonthAdjustmentLitres);
+             const adjustmentN2 = Math.max(0, monthState.twoMonthsPriorAdjustmentLitres);
+             const totalConsumptionThisPeriod = currentMonthOwnUsage + adjustmentN1 + adjustmentN2;
+             monthState.monthlyConsumptionLitres = totalConsumptionThisPeriod;
+             monthState.calculatedEndReading = monthState.calculatedStartReading + totalConsumptionThisPeriod;
+
+             // --- 18d & 18e ---
+             updateMonthUI(monthId);
+             calculateMonthBill(monthId);
+        }
+
+        // --- [19]: UI Update Function ---
+        function updateMonthUI(monthId) {
+            const monthState = monthlyData[monthId]; if (!monthState) return;
+            // Get Elements
+            const startDisplaySpan = document.getElementById(`start-reading-display-${monthId}`); const endReadingSpan = document.getElementById(`end-reading-${monthId}`); const dailyCon = document.getElementById(`daily-consumption-${monthId}`); const currentMonthUsageValue = document.getElementById(`current-month-usage-value-${monthId}`); const totalBill = document.getElementById(`total-bill-${monthId}`); const statusInd = document.getElementById(`status-indicator-${monthId}`); const endReadingStatus = document.getElementById(`end-reading-status-${monthId}`);
+            const adjRowN1 = document.getElementById(`adjustment-row-${monthId}`); const adjLabelN1 = document.getElementById(`adjustment-label-${monthId}`); const adjValueN1 = document.getElementById(`adjustment-value-${monthId}`);
+            const adjRowN2 = document.getElementById(`two-months-prior-adjustment-row-${monthId}`); const adjLabelN2 = document.getElementById(`two-months-prior-adjustment-label-${monthId}`); const adjValueN2 = document.getElementById(`two-months-prior-adjustment-value-${monthId}`);
+            const balanceFwdValue = document.getElementById(`balance-carried-forward-${monthId}`); const amountDueValue = document.getElementById(`amount-due-${monthId}`); const balanceOutValue = document.getElementById(`balance-outstanding-${monthId}`);
+
+            // Update Standard Values & Current Usage
+            if(startDisplaySpan) startDisplaySpan.textContent = monthState.calculatedStartReading.toFixed(2); if(endReadingSpan) endReadingSpan.textContent = `${monthState.calculatedEndReading.toFixed(2)} `; if(endReadingStatus) endReadingStatus.textContent = monthState.isFinalized ? "(Final)" : "(Estimated)"; if(dailyCon) dailyCon.textContent = monthState.dailyConsumption.toFixed(2); if(currentMonthUsageValue) currentMonthUsageValue.textContent = `${monthState.currentMonthOwnUsageLitres.toFixed(0)} L`; if(totalBill) totalBill.textContent = `R${monthState.monthlyBill.toFixed(2)}`;
+
+            // Update Status Indicator
+            if(statusInd) { statusInd.textContent = monthState.isFinalized ? 'Finalized' : 'Estimated'; statusInd.className = `status-indicator status-${monthState.isFinalized ? 'finalized' : 'estimated'}`; }
+
+            // Update Adjustment Rows
+            if (adjRowN1 && adjLabelN1 && adjValueN1 && monthState.config.prevMonthId) { const prevMonthConfig = monthConfigs[monthState.config.prevMonthId]; const adjustmentAmount = monthState.previousMonthAdjustmentLitres; const labelTextN1 = prevMonthConfig ? prevMonthConfig.name : "Previous"; if (adjustmentAmount !== 0) { const isUnder = adjustmentAmount > 0; adjLabelN1.textContent = `${labelTextN1} Adjustment:`; adjValueN1.textContent = `${adjustmentAmount.toFixed(0)} L`; adjRowN1.style.display = 'flex'; adjRowN1.classList.toggle('overestimated', !isUnder); } else { adjRowN1.style.display = 'none'; } } else if(adjRowN1) { adjRowN1.style.display = 'none';}
+            const prevPrevMonthId = monthState.config.prevMonthId ? monthConfigs[monthState.config.prevMonthId]?.prevMonthId : null; if (adjRowN2 && adjLabelN2 && adjValueN2 && prevPrevMonthId) { const prevPrevMonthConfig = monthConfigs[prevPrevMonthId]; const adjustmentAmountN2 = monthState.twoMonthsPriorAdjustmentLitres; const labelTextN2 = prevPrevMonthConfig ? prevPrevMonthConfig.name : "Prior"; if (adjustmentAmountN2 !== 0) { const isUnderN2 = adjustmentAmountN2 > 0; adjLabelN2.textContent = `${labelTextN2} Adjustment:`; adjValueN2.textContent = `${adjustmentAmountN2.toFixed(0)} L`; adjRowN2.style.display = 'flex'; adjRowN2.classList.toggle('overestimated', !isUnderN2); } else { adjRowN2.style.display = 'none'; } } else if(adjRowN2) { adjRowN2.style.display = 'none';}
+
+             // Update Financial Rows
+             const formatCurrency = (value) => { const absValue = Math.abs(value).toFixed(2); return value < 0 ? `(R${absValue})` : `R${absValue}`; } ; if (balanceFwdValue) balanceFwdValue.textContent = formatCurrency(monthState.balanceCarriedForward); if (amountDueValue) amountDueValue.textContent = formatCurrency(monthState.amountDue); if (balanceOutValue) { balanceOutValue.textContent = formatCurrency(monthState.balanceOutstanding); balanceOutValue.classList.toggle('negative-balance', monthState.balanceOutstanding < 0); }
+
+            // Update Default Start for NEXT Month
+            const config = monthState.config; const nextMonthIndex = monthSequence.indexOf(monthId) + 1; if (nextMonthIndex < monthSequence.length) { const nextMonthId = monthSequence[nextMonthIndex]; if (displayedMonths.includes(nextMonthId)) { const projectedStart = monthState.calculatedEndReading + monthState.dailyConsumption; const nextDefaultInput = document.getElementById(`default-start-reading-${nextMonthId}`); if (nextDefaultInput) { nextDefaultInput.value = projectedStart.toFixed(2); } const nextOverrideInput = document.getElementById(`override-start-reading-${nextMonthId}`); if (monthlyData[nextMonthId] && nextOverrideInput && nextOverrideInput.value.trim() === '') { } } }
+        }
+
+
+        // --- [20]: Billing Calculation Function - Specific Month ---
+        function calculateMonthBill(monthId) { const monthState = monthlyData[monthId]; if (!monthState) return; const priceInput = document.getElementById('per-kilolitre-price'); const pricePerKl = parseFloat(priceInput.value) || 0; const totalKiloLitres = monthState.monthlyConsumptionLitres / 1000; monthState.monthlyBill = totalKiloLitres * pricePerKl; const totalBillElement = document.getElementById(`total-bill-${monthId}`); if (totalBillElement) { totalBillElement.textContent = `R${monthState.monthlyBill.toFixed(2)}`; } calculateFinancials(monthId); }
+
+        // --- [21]: Calculation Logic Section - Default Start ---
+        function calculateDefaultStartReading(monthId, prevMonthId) { const currentMonthState = monthlyData[monthId]; const prevMonthState = monthlyData[prevMonthId]; if (!currentMonthState || !prevMonthState) { console.warn(`Cannot calculate default start for ${monthId}: Missing data for ${monthId} or ${prevMonthId}`); return; } const projectedStart = prevMonthState.calculatedEndReading + prevMonthState.dailyConsumption; const defaultStartInput = document.getElementById(`default-start-reading-${monthId}`); if (defaultStartInput) { defaultStartInput.value = projectedStart.toFixed(2); } else { console.warn(`Default start input field not found for ${monthId}`); } }
+
+        // --- [22]: Financial Calculation Logic ---
+        function handlePaymentChange(monthId) { calculateFinancials(monthId); const currentMonthIndex = displayedMonths.indexOf(monthId); if (currentMonthIndex < displayedMonths.length - 1) { const nextMonthId = displayedMonths[currentMonthIndex + 1]; calculateFinancials(nextMonthId); } }
+        function calculateFinancials(monthId) { const monthState = monthlyData[monthId]; if (!monthState) { console.error("Cannot calculate financials, month data missing for:", monthId); return; } const config = monthState.config; const prevMonthId = config.prevMonthId; monthState.balanceCarriedForward = 0; if (prevMonthId && monthlyData[prevMonthId]) { monthState.balanceCarriedForward = monthlyData[prevMonthId].balanceOutstanding; } const paymentInput = document.getElementById(`payment-made-${monthId}`); monthState.paymentMade = paymentInput ? (parseFloat(paymentInput.value) || 0) : 0; monthState.amountDue = monthState.balanceCarriedForward + monthState.monthlyBill; monthState.balanceOutstanding = monthState.amountDue - monthState.paymentMade; updateMonthUI(monthId); }
+
+    </script>
+</body>
+</html>
